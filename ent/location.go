@@ -19,7 +19,7 @@ type Location struct {
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Coords holds the value of the "coords" field.
-	Coords schema.Point `json:"coords,omitempty"`
+	Coords *schema.Point `json:"coords,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the LocationQuery when eager-loading is set.
 	Edges             LocationEdges `json:"edges"`
@@ -66,13 +66,13 @@ func (*Location) scanValues(columns []string) ([]interface{}, error) {
 	for i := range columns {
 		switch columns[i] {
 		case location.FieldCoords:
-			values[i] = &schema.Point{}
+			values[i] = new(schema.Point)
 		case location.FieldID:
-			values[i] = &sql.NullInt64{}
+			values[i] = new(sql.NullInt64)
 		case location.FieldName:
-			values[i] = &sql.NullString{}
+			values[i] = new(sql.NullString)
 		case location.ForeignKeys[0]: // location_children
-			values[i] = &sql.NullInt64{}
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Location", columns[i])
 		}
@@ -104,7 +104,7 @@ func (l *Location) assignValues(columns []string, values []interface{}) error {
 			if value, ok := values[i].(*schema.Point); !ok {
 				return fmt.Errorf("unexpected type %T for field coords", values[i])
 			} else if value != nil {
-				l.Coords = *value
+				l.Coords = value
 			}
 		case location.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {

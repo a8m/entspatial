@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/a8m/entspatial/ent/predicate"
+	"github.com/a8m/entspatial/ent/schema"
 )
 
 // ID filters vertices based on their ID field.
@@ -95,6 +96,13 @@ func IDLTE(id int) predicate.Location {
 func Name(v string) predicate.Location {
 	return predicate.Location(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldName), v))
+	})
+}
+
+// Coords applies equality check predicate on the "coords" field. It's identical to CoordsEQ.
+func Coords(v *schema.Point) predicate.Location {
+	return predicate.Location(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCoords), v))
 	})
 }
 
@@ -206,6 +214,82 @@ func NameEqualFold(v string) predicate.Location {
 func NameContainsFold(v string) predicate.Location {
 	return predicate.Location(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldName), v))
+	})
+}
+
+// CoordsEQ applies the EQ predicate on the "coords" field.
+func CoordsEQ(v *schema.Point) predicate.Location {
+	return predicate.Location(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCoords), v))
+	})
+}
+
+// CoordsNEQ applies the NEQ predicate on the "coords" field.
+func CoordsNEQ(v *schema.Point) predicate.Location {
+	return predicate.Location(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldCoords), v))
+	})
+}
+
+// CoordsIn applies the In predicate on the "coords" field.
+func CoordsIn(vs ...*schema.Point) predicate.Location {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Location(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldCoords), v...))
+	})
+}
+
+// CoordsNotIn applies the NotIn predicate on the "coords" field.
+func CoordsNotIn(vs ...*schema.Point) predicate.Location {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Location(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldCoords), v...))
+	})
+}
+
+// CoordsGT applies the GT predicate on the "coords" field.
+func CoordsGT(v *schema.Point) predicate.Location {
+	return predicate.Location(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldCoords), v))
+	})
+}
+
+// CoordsGTE applies the GTE predicate on the "coords" field.
+func CoordsGTE(v *schema.Point) predicate.Location {
+	return predicate.Location(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldCoords), v))
+	})
+}
+
+// CoordsLT applies the LT predicate on the "coords" field.
+func CoordsLT(v *schema.Point) predicate.Location {
+	return predicate.Location(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldCoords), v))
+	})
+}
+
+// CoordsLTE applies the LTE predicate on the "coords" field.
+func CoordsLTE(v *schema.Point) predicate.Location {
+	return predicate.Location(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldCoords), v))
 	})
 }
 

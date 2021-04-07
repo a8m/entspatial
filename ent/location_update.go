@@ -34,7 +34,7 @@ func (lu *LocationUpdate) SetName(s string) *LocationUpdate {
 }
 
 // SetCoords sets the "coords" field.
-func (lu *LocationUpdate) SetCoords(s schema.Point) *LocationUpdate {
+func (lu *LocationUpdate) SetCoords(s *schema.Point) *LocationUpdate {
 	lu.mutation.SetCoords(s)
 	return lu
 }
@@ -291,6 +291,7 @@ func (lu *LocationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // LocationUpdateOne is the builder for updating a single Location entity.
 type LocationUpdateOne struct {
 	config
+	fields   []string
 	hooks    []Hook
 	mutation *LocationMutation
 }
@@ -302,7 +303,7 @@ func (luo *LocationUpdateOne) SetName(s string) *LocationUpdateOne {
 }
 
 // SetCoords sets the "coords" field.
-func (luo *LocationUpdateOne) SetCoords(s schema.Point) *LocationUpdateOne {
+func (luo *LocationUpdateOne) SetCoords(s *schema.Point) *LocationUpdateOne {
 	luo.mutation.SetCoords(s)
 	return luo
 }
@@ -373,6 +374,13 @@ func (luo *LocationUpdateOne) RemoveChildren(l ...*Location) *LocationUpdateOne 
 	return luo.RemoveChildIDs(ids...)
 }
 
+// Select allows selecting one or more fields (columns) of the returned entity.
+// The default is selecting all fields defined in the entity schema.
+func (luo *LocationUpdateOne) Select(field string, fields ...string) *LocationUpdateOne {
+	luo.fields = append([]string{field}, fields...)
+	return luo
+}
+
 // Save executes the query and returns the updated Location entity.
 func (luo *LocationUpdateOne) Save(ctx context.Context) (*Location, error) {
 	var (
@@ -440,6 +448,18 @@ func (luo *LocationUpdateOne) sqlSave(ctx context.Context) (_node *Location, err
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Location.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if fields := luo.fields; len(fields) > 0 {
+		_spec.Node.Columns = make([]string, 0, len(fields))
+		_spec.Node.Columns = append(_spec.Node.Columns, location.FieldID)
+		for _, f := range fields {
+			if !location.ValidColumn(f) {
+				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
+			}
+			if f != location.FieldID {
+				_spec.Node.Columns = append(_spec.Node.Columns, f)
+			}
+		}
+	}
 	if ps := luo.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

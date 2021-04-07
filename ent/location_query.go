@@ -21,6 +21,7 @@ type LocationQuery struct {
 	config
 	limit      *int
 	offset     *int
+	unique     *bool
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Location
@@ -48,6 +49,13 @@ func (lq *LocationQuery) Limit(limit int) *LocationQuery {
 // Offset adds an offset step to the query.
 func (lq *LocationQuery) Offset(offset int) *LocationQuery {
 	lq.offset = &offset
+	return lq
+}
+
+// Unique configures the query builder to filter duplicate records on query.
+// By default, unique is set to true, and can be disabled using this method.
+func (lq *LocationQuery) Unique(unique bool) *LocationQuery {
+	lq.unique = &unique
 	return lq
 }
 
@@ -413,10 +421,14 @@ func (lq *LocationQuery) sqlAll(ctx context.Context) ([]*Location, error) {
 		ids := make([]int, 0, len(nodes))
 		nodeids := make(map[int][]*Location)
 		for i := range nodes {
-			if fk := nodes[i].location_children; fk != nil {
-				ids = append(ids, *fk)
-				nodeids[*fk] = append(nodeids[*fk], nodes[i])
+			if nodes[i].location_children == nil {
+				continue
 			}
+			fk := *nodes[i].location_children
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
 		}
 		query.Where(location.IDIn(ids...))
 		neighbors, err := query.All(ctx)
@@ -474,7 +486,7 @@ func (lq *LocationQuery) sqlCount(ctx context.Context) (int, error) {
 func (lq *LocationQuery) sqlExist(ctx context.Context) (bool, error) {
 	n, err := lq.sqlCount(ctx)
 	if err != nil {
-		return false, fmt.Errorf("ent: check existence: %v", err)
+		return false, fmt.Errorf("ent: check existence: %w", err)
 	}
 	return n > 0, nil
 }
@@ -491,6 +503,9 @@ func (lq *LocationQuery) querySpec() *sqlgraph.QuerySpec {
 		},
 		From:   lq.sql,
 		Unique: true,
+	}
+	if unique := lq.unique; unique != nil {
+		_spec.Unique = *unique
 	}
 	if fields := lq.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
@@ -517,7 +532,7 @@ func (lq *LocationQuery) querySpec() *sqlgraph.QuerySpec {
 	if ps := lq.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
-				ps[i](selector, location.ValidColumn)
+				ps[i](selector)
 			}
 		}
 	}
@@ -536,7 +551,7 @@ func (lq *LocationQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		p(selector)
 	}
 	for _, p := range lq.order {
-		p(selector, location.ValidColumn)
+		p(selector)
 	}
 	if offset := lq.offset; offset != nil {
 		// limit is mandatory for offset clause. We start
@@ -802,7 +817,7 @@ func (lgb *LocationGroupBy) sqlQuery() *sql.Selector {
 	columns := make([]string, 0, len(lgb.fields)+len(lgb.fns))
 	columns = append(columns, lgb.fields...)
 	for _, fn := range lgb.fns {
-		columns = append(columns, fn(selector, location.ValidColumn))
+		columns = append(columns, fn(selector))
 	}
 	return selector.Select(columns...).GroupBy(lgb.fields...)
 }

@@ -11,12 +11,10 @@ const (
 	FieldName = "name"
 	// FieldCoords holds the string denoting the coords field in the database.
 	FieldCoords = "coords"
-
 	// EdgeParent holds the string denoting the parent edge name in mutations.
 	EdgeParent = "parent"
 	// EdgeChildren holds the string denoting the children edge name in mutations.
 	EdgeChildren = "children"
-
 	// Table holds the table name of the location in the database.
 	Table = "locations"
 	// ParentTable is the table the holds the parent relation/edge.
@@ -36,7 +34,8 @@ var Columns = []string{
 	FieldCoords,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the Location type.
+// ForeignKeys holds the SQL foreign-keys that are owned by the "locations"
+// table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"location_children",
 }

@@ -33,7 +33,7 @@ type LocationMutation struct {
 	typ             string
 	id              *int
 	name            *string
-	coords          *schema.Point
+	coords          **schema.Point
 	clearedFields   map[string]struct{}
 	parent          *int
 	clearedparent   bool
@@ -161,12 +161,12 @@ func (m *LocationMutation) ResetName() {
 }
 
 // SetCoords sets the "coords" field.
-func (m *LocationMutation) SetCoords(s schema.Point) {
+func (m *LocationMutation) SetCoords(s *schema.Point) {
 	m.coords = &s
 }
 
 // Coords returns the value of the "coords" field in the mutation.
-func (m *LocationMutation) Coords() (r schema.Point, exists bool) {
+func (m *LocationMutation) Coords() (r *schema.Point, exists bool) {
 	v := m.coords
 	if v == nil {
 		return
@@ -177,7 +177,7 @@ func (m *LocationMutation) Coords() (r schema.Point, exists bool) {
 // OldCoords returns the old "coords" field's value of the Location entity.
 // If the Location object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *LocationMutation) OldCoords(ctx context.Context) (v schema.Point, err error) {
+func (m *LocationMutation) OldCoords(ctx context.Context) (v *schema.Point, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, fmt.Errorf("OldCoords is only allowed on UpdateOne operations")
 	}
@@ -351,7 +351,7 @@ func (m *LocationMutation) SetField(name string, value ent.Value) error {
 		m.SetName(v)
 		return nil
 	case location.FieldCoords:
-		v, ok := value.(schema.Point)
+		v, ok := value.(*schema.Point)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/a8m/entspatial/ent/location"
+
 	"github.com/a8m/entspatial/ent"
 	"github.com/a8m/entspatial/ent/schema"
 
@@ -24,21 +26,31 @@ func Example_Point() {
 	if err := client.Schema.Create(ctx); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
+
+	// Clear the "locations" table before running this test:
+	// client.Location.Delete().ExecX(ctx)
+
 	tlv := client.Location.
 		Create().
 		SetName("TLV").
-		SetCoords(schema.Point{32.109333, 34.855499}).
+		SetCoords(&schema.Point{32.109333, 34.855499}).
 		SaveX(ctx)
-	fmt.Println(tlv.Name, tlv.Coords)
+	fmt.Println(tlv.Name, *tlv.Coords)
 	office := client.Location.
 		Create().
 		SetName("FB").
-		SetCoords(schema.Point{32.072184, 34.78471}).
+		SetCoords(&schema.Point{32.072184, 34.78471}).
 		SetParent(tlv).
 		SaveX(ctx)
-	fmt.Println(office.Name, office.Coords)
+	fmt.Println(office.Name, *office.Coords)
+	office = client.Location.
+		Query().
+		Where(location.Coords(&schema.Point{32.072184, 34.78471})).
+		OnlyX(ctx)
+	fmt.Println(office.Name, *office.Coords)
 
 	// Output:
 	// TLV [32.109333 34.855499]
+	// FB [32.072184 34.78471]
 	// FB [32.072184 34.78471]
 }

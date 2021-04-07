@@ -27,7 +27,7 @@ func (lc *LocationCreate) SetName(s string) *LocationCreate {
 }
 
 // SetCoords sets the "coords" field.
-func (lc *LocationCreate) SetCoords(s schema.Point) *LocationCreate {
+func (lc *LocationCreate) SetCoords(s *schema.Point) *LocationCreate {
 	lc.mutation.SetCoords(s)
 	return lc
 }
@@ -183,6 +183,7 @@ func (lc *LocationCreate) createSpec() (*Location, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.location_children = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := lc.mutation.ChildrenIDs(); len(nodes) > 0 {

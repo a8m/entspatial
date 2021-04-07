@@ -22,9 +22,8 @@ var (
 		PrimaryKey: []*schema.Column{LocationsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:  "locations_locations_children",
-				Columns: []*schema.Column{LocationsColumns[3]},
-
+				Symbol:     "locations_locations_children",
+				Columns:    []*schema.Column{LocationsColumns[3]},
 				RefColumns: []*schema.Column{LocationsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
